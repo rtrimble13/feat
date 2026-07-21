@@ -1,0 +1,28 @@
+[
+ {
+  "symbol": "TEST",
+  "companyName": "Test Co",
+  "sector": "Technology",
+  "industry": "Hardware",
+  "marketCap": 100000000000,
+  "price": 100.0,
+  "beta": 1.2,
+  "lastAnnualDividend": 3.0,
+  "volume": 50000000,
+  "exchangeShortName": "NASDAQ",
+  "country": "US"
+ },
+ {
+  "symbol": "OTHER",
+  "companyName": "Other Co",
+  "sector": "Technology",
+  "industry": "Software",
+  "marketCap": 50000000000,
+  "price": 40.0,
+  "beta": 0.9,
+  "lastAnnualDividend": 0,
+  "volume": 10000000,
+  "exchangeShortName": "NYSE",
+  "country": "US"
+ }
+]
