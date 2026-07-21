@@ -176,15 +176,18 @@ class FmpClient:
         return body
 
     def _fetch_with_retry(self, endpoint: Endpoint, url: str, query: dict) -> Json:
-        if not self._breaker.allow():
-            raise FmpUnavailable(
-                f"circuit breaker open for FMP (endpoint {endpoint.name}); "
-                "retry after the cooldown window"
-            )
         params = dict(query)
         params["apikey"] = self._api_key  # requests handles ?/& placement
         last_error: Exception | None = None
         for attempt in range(self._max_retries + 1):
+            # Re-check on every attempt, not only before the loop: if the
+            # failures recorded during *this* call trip the breaker, stop
+            # retrying immediately instead of amplifying an FMP outage.
+            if not self._breaker.allow():
+                raise FmpUnavailable(
+                    f"circuit breaker open for FMP (endpoint {endpoint.name}); "
+                    "retry after the cooldown window"
+                )
             if attempt > 0:
                 delay = min(2.0 ** attempt, 30.0) + self._rng.uniform(0, 0.5)
                 if isinstance(last_error, _RetryAfter) and last_error.seconds is not None:

@@ -20,6 +20,11 @@ The version itself is single-sourced in `feat/__init__.py` and bumped with
   sensitivity grid, whose growth axis had no effect on that model.
 - Reconstructed FCFF/FCFE use a genuinely missing diluted share count as a
   gap instead of treating a reported `0.0` as absent.
+- FCFE net borrowing now prefers FMP's explicit `netDebtIssuance` field and
+  falls back to the legacy `debtRepayment` only when it is absent.
+- The FMP client re-checks the circuit breaker on every retry attempt, so a
+  breaker that trips mid-call stops retrying instead of exhausting its
+  budget against an outage.
 
 ### Added
 

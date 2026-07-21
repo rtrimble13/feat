@@ -82,6 +82,21 @@ def test_circuit_breaker_opens_and_fails_fast(tmp_path):
 
 
 @responses.activate
+def test_breaker_trips_mid_retries_and_stops_early(tmp_path):
+    # threshold below the retry budget: the breaker opens partway through a
+    # single get(), which must then stop hammering FMP instead of using up
+    # all its retries.
+    breaker = CircuitBreaker(failure_threshold=2, cooldown_seconds=600)
+    client = make_client(tmp_path, cache=False, max_retries=5, breaker=breaker)
+    responses.get(PROFILE_URL, status=503)  # every attempt 503s
+    with pytest.raises(FmpUnavailable, match="circuit breaker open"):
+        client.get(ep.PROFILE, {"symbol": "TEST"})
+    # 2 failures open the breaker; the 3rd attempt bails before the network,
+    # so far fewer than max_retries+1 (6) calls are made.
+    assert len(responses.calls) == 2
+
+
+@responses.activate
 def test_cache_hit_avoids_second_request(client):
     responses.get(PROFILE_URL, json=[{"symbol": "TEST"}])
     client.get(ep.PROFILE, {"symbol": "TEST"})

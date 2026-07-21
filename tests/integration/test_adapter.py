@@ -7,7 +7,7 @@ import responses
 
 from feat.domain.errors import SymbolNotFound
 from feat.domain.values import MISSING, PeriodType, Ticker, is_missing
-from feat.infra.fmp.adapter import FmpAdapter, chunk_symbols
+from feat.infra.fmp.adapter import FmpAdapter, _money_first, chunk_symbols
 from tests.integration.conftest import load_fixture, make_client
 
 V3 = "https://financialmodelingprep.com/api/v3"
@@ -66,6 +66,18 @@ def test_absent_field_becomes_missing_never_zero(tmp_path):
     fy2022 = history.statements[2]
     assert is_missing(fy2022.income.ebitda)  # fixture deliberately omits it
     assert fy2022.income.ebitda is MISSING
+
+
+def test_money_first_prefers_explicit_net_issuance_over_repayment():
+    # net debt issuance wins when present...
+    both = {"netDebtIssuance": 5e9, "debtRepayment": -1e9}
+    assert _money_first(both, ("netDebtIssuance", "debtRepayment"), "USD").amount == 5e9
+    # ...and the legacy field is the fallback when it is absent
+    legacy = {"debtRepayment": -1e9}
+    assert _money_first(legacy, ("netDebtIssuance", "debtRepayment"), "USD").amount == -1e9
+    # neither present, or non-numeric, becomes MISSING (never 0)
+    assert is_missing(_money_first({}, ("netDebtIssuance", "debtRepayment"), "USD"))
+    assert is_missing(_money_first({"netDebtIssuance": None}, ("netDebtIssuance",), "USD"))
 
 
 @responses.activate
