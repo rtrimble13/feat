@@ -68,6 +68,18 @@ Exit codes: `0` success · `1` unexpected · `2` usage · `3` symbol not found �
 `4` insufficient data · `5` rate limited · `6` FMP unavailable · `7` config
 error. Batch runs report failed tickers on stderr and keep going.
 
+## Guides
+
+Task-driven walkthroughs of every command live in
+[`docs/vignettes/`](docs/vignettes/README.md) — from
+[getting started](docs/vignettes/00-getting-started.md) through
+[reading](docs/vignettes/01-analyze.md),
+[valuing](docs/vignettes/02-value.md),
+[screening](docs/vignettes/03-screen.md),
+[comparing](docs/vignettes/04-compare.md) and
+[reporting](docs/vignettes/05-report.md) a company — showing how the commands
+compose into a full analysis session.
+
 ## Architecture
 
 Layered (hexagonal); dependencies point inward. The domain knows nothing
@@ -92,6 +104,24 @@ python -m pytest             # unit + integration (recorded fixtures) + e2e
 
 No test touches the network: domain math is pure; the adapter runs against
 recorded FMP fixtures; e2e invokes the CLI with stubbed HTTP.
+
+## Releasing
+
+The version is single-sourced in `feat/__init__.py`; `pyproject.toml` reads
+it dynamically, so `feat --version` and the package metadata can never
+disagree (see [`docs/adr/0004`](docs/adr/0004-single-source-versioning.md)).
+Bump it with the helper — it rewrites the version, promotes the changelog's
+`[Unreleased]` section, and can cut the tag:
+
+```sh
+python scripts/bump_version.py patch          # 1.0.0 -> 1.0.1 (also minor | major)
+python scripts/bump_version.py minor --tag    # bump, commit, and create vX.Y.Z
+git push --follow-tags
+```
+
+Pushing a `vX.Y.Z` tag runs the release workflow, which refuses to publish
+unless the tag matches `feat.__version__` and the tests pass. All notable
+changes are recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Not investment advice
 

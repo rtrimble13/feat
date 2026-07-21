@@ -6,6 +6,7 @@ Schema quirks are quarantined here:
 - ``period`` is normalized to FMP's required ``annual`` | ``quarter``
 - ``[]`` for an unknown symbol becomes ``SymbolNotFound``
 - absent/null fields become the MISSING sentinel, never 0
+- net borrowing prefers ``netDebtIssuance`` over legacy ``debtRepayment``
 - ``YYYY-MM-DD`` strings become ``date`` objects at this boundary
 - batch symbol requests are chunked to a reliable size
 """
@@ -52,6 +53,19 @@ def _number(record: dict, field: str) -> float | None:
     if value is None or isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
     return float(value)
+
+
+def _money_first(record: dict, fields: tuple[str, ...], currency: str) -> MoneyLike:
+    """First present numeric field among ``fields`` as Money, else MISSING.
+
+    Lets a preferred, unambiguous field win over a legacy fallback (e.g.
+    net debt *issuance* over the poorly-named ``debtRepayment``).
+    """
+    for field in fields:
+        value = record.get(field)
+        if value is not None and not isinstance(value, bool) and isinstance(value, (int, float)):
+            return Money(float(value), currency)
+    return MISSING
 
 
 def _parse_date(value: Any) -> date:
@@ -218,7 +232,11 @@ class FmpAdapter(FundamentalsRepository, PriceRepository):
             capital_expenditure=_money(r, "capitalExpenditure", cur),
             dividends_paid=_money(r, "dividendsPaid", cur),
             share_repurchases=_money(r, "commonStockRepurchased", cur),
-            debt_issued_net=_money(r, "debtRepayment", cur),
+            # Net borrowing for FCFE: prefer FMP's explicit net-debt-issuance
+            # line (issuance net of repayment, correctly signed) and fall back
+            # to the legacy, misleadingly-named ``debtRepayment`` field only
+            # when it is absent.
+            debt_issued_net=_money_first(r, ("netDebtIssuance", "debtRepayment"), cur),
             free_cash_flow=_money(r, "freeCashFlow", cur),
             net_change_in_cash=_money(r, "netChangeInCash", cur),
         )

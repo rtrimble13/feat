@@ -21,6 +21,12 @@ from feat.domain.ratios import (
 from feat.domain.values import amount_of
 
 
+def _growth(current: float | None, prior: float | None) -> float | None:
+    """Period-over-period growth rate; None if either endpoint is missing."""
+    ratio = div(current, prior)
+    return ratio - 1.0 if ratio is not None else None
+
+
 def tax_rate_of(s: StatementSet) -> float | None:
     return profitability.effective_tax_rate(
         amount_of(s.income.income_tax_expense), amount_of(s.income.income_before_tax)
@@ -168,11 +174,7 @@ def ratio_rows(current: StatementSet, prior: StatementSet | None) -> dict[str, f
         "fcff": fcff_of(current),
         "fcfe": fcfe_of(current),
         # growth
-        "revenue_growth": (
-            div(revenue, amount_of(prior.income.revenue)) - 1.0
-            if prior and div(revenue, amount_of(prior.income.revenue)) is not None
-            else None
-        ),
+        "revenue_growth": _growth(revenue, amount_of(prior.income.revenue)) if prior else None,
     }
 
 
