@@ -111,7 +111,10 @@ class ValueCompany:
             reference = ref_result.unwrap()
 
         sensitivity = None
-        if with_sensitivity and model_name in {"dcf-fcff", "dcf-fcfe", "ddm", "residual-income"}:
+        # The grid varies the discount rate and terminal growth; residual
+        # income is not a function of terminal growth, so its growth axis
+        # would be inert and the table misleading — omit it there.
+        if with_sensitivity and model_name in {"dcf-fcff", "dcf-fcfe", "ddm"}:
             sensitivity = wacc_growth_grid(build_valuation_model(model_name), inputs)
 
         monte_carlo = None
@@ -144,7 +147,11 @@ class ValueCompany:
         rows = derive.ratio_rows(latest, prior)
 
         price = amount_of(company.price)
-        shares = latest.income.weighted_shares_diluted or company.shares_outstanding
+        # A reported 0.0 diluted share count is bad data, not "absent"; only
+        # fall back to shares outstanding when the count is genuinely missing.
+        shares = latest.income.weighted_shares_diluted
+        if shares is None:
+            shares = company.shares_outstanding
         market_cap = amount_of(company.market_cap)
         if market_cap is None and price is not None and shares is not None:
             market_cap = price * shares

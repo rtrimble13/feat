@@ -26,6 +26,7 @@ class BeneishPeriod:
     depreciation_amortization: float | None
     sga_expense: float | None
     total_debt: float | None
+    total_liabilities: float | None
     net_income: float | None
     operating_cash_flow: float | None
 
@@ -64,7 +65,13 @@ def beneish_m(current: BeneishPeriod, prior: BeneishPeriod) -> BeneishResult | N
         if current.net_income is not None and current.operating_cash_flow is not None
         else None
     )
-    lvgi = div(div(current.total_debt, current.total_assets), div(prior.total_debt, prior.total_assets))
+    # LVGI is the canonical Beneish leverage ratio: total *liabilities* over
+    # total assets, not just interest-bearing debt (a shift into payables or
+    # deferred revenue is still a leverage change the model must see).
+    lvgi = div(
+        div(current.total_liabilities, current.total_assets),
+        div(prior.total_liabilities, prior.total_assets),
+    )
 
     indices = {
         "DSRI": dsri, "GMI": gmi, "AQI": aqi, "SGI": sgi,

@@ -1,0 +1,45 @@
+name: Release
+
+# Tag-driven release gate: a vX.Y.Z tag must match the single-sourced
+# package version, the tests must pass, and the package must build. This is
+# the automation half of the versioning workflow — `scripts/bump_version.py`
+# produces the tag, and this job refuses to release if it drifts.
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install -e .[dev] build
+
+      - name: Verify tag matches package version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(python -c 'import feat; print(feat.__version__)')"
+          echo "tag=$tag package=$pkg"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::tag v$tag does not match feat.__version__ ($pkg)." \
+                 "Bump with scripts/bump_version.py so they agree."
+            exit 1
+          fi
+
+      - name: Run tests
+        run: python -m pytest -q
+
+      - name: Build distribution
+        run: python -m build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*

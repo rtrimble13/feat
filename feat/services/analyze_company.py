@@ -113,6 +113,7 @@ class AnalyzeCompany:
                 depreciation_amortization=amount_of(cf.depreciation_amortization),
                 sga_expense=amount_of(inc.sga_expense),
                 total_debt=amount_of(bal.total_debt),
+                total_liabilities=amount_of(bal.total_liabilities),
                 net_income=amount_of(inc.net_income),
                 operating_cash_flow=amount_of(cf.operating_cash_flow),
             )

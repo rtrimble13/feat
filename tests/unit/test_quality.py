@@ -68,7 +68,8 @@ class TestBeneish:
         base = dict(
             receivables=10, revenue=100, gross_profit=40, total_assets=120,
             current_assets=45, ppe_net=30, depreciation_amortization=5,
-            sga_expense=10, total_debt=30, net_income=19.2, operating_cash_flow=28,
+            sga_expense=10, total_debt=30, total_liabilities=60,
+            net_income=19.2, operating_cash_flow=28,
         )
         base.update(overrides)
         return BeneishPeriod(**base)
