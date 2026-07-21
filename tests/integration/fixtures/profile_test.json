@@ -1,0 +1,15 @@
+[
+ {
+  "symbol": "TEST",
+  "companyName": "Test Co",
+  "price": 100.0,
+  "beta": 1.2,
+  "mktCap": 100000000000,
+  "currency": "USD",
+  "sector": "Technology",
+  "industry": "Hardware",
+  "exchangeShortName": "NASDAQ",
+  "sharesOutstanding": 1000000000,
+  "description": "A synthetic issuer used in feat's test fixtures."
+ }
+]

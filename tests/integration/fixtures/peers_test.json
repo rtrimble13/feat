@@ -1,0 +1,10 @@
+[
+ {
+  "symbol": "TEST",
+  "peersList": [
+   "PEERA",
+   "PEERB",
+   "bad ticker!"
+  ]
+ }
+]

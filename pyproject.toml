@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools==69.5.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "feat"
+version = "1.0.0"
+description = "Fundamental Equity Analysis Tool - CFA-grade equity analysis from the terminal, powered by Financial Modeling Prep"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+dependencies = [
+    "requests==2.32.3",
+    "tabulate==0.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.2.2",
+    "responses==0.25.3",
+]
+
+[project.scripts]
+feat = "feat.cli.main:main"
+
+[tool.setuptools.packages.find]
+include = ["feat*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
