@@ -1,6 +1,6 @@
 """Efficiency / activity ratios.
 
-- asset turnover        = revenue / average total assets
+- asset turnover        = revenue / average total assets (ending when no prior)
 - DSO (days sales)      = receivables / revenue x 365
 - DIO (days inventory)  = inventory / COGS x 365
 - DPO (days payable)    = payables / COGS x 365

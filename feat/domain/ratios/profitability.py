@@ -6,11 +6,14 @@ Definitions (see docs/formulas.md):
 - operating margin  = operating income / revenue
 - EBITDA margin     = EBITDA / revenue
 - net margin        = net income / revenue
-- ROA               = net income / average total assets
-- ROE               = net income / average total equity
+- ROA               = net income / average total assets (ending when no prior)
+- ROE               = net income / average total equity (ending when no prior)
 - NOPAT             = operating income x (1 - effective tax rate)
 - invested capital  = total debt + total equity - cash & equivalents
-- ROIC              = NOPAT / average invested capital
+- ROIC              = NOPAT / average invested capital (ending when no prior)
+
+Averages use (current + prior) / 2 only when a prior period is supplied;
+with no prior the ending balance is used. See ``docs/formulas.md``.
 - ROCE              = EBIT / (total assets - current liabilities)
 - ROIC-WACC spread  = ROIC - WACC (the headline value-creation signal)
 """
