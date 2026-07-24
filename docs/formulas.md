@@ -16,11 +16,11 @@ Rates are fractions throughout (0.15 = 15%).
 
 - gross / operating / EBITDA / net margin = line item ÷ revenue
 - ROA = net income ÷ average total assets (single-period assets when no prior)
-- ROE = net income ÷ average total equity
+- ROE = net income ÷ average total equity (single-period when no prior)
 - effective tax rate = income tax expense ÷ pre-tax income, clamped to [0, 1]
 - NOPAT = operating income × (1 − effective tax rate)
 - **invested capital = total debt + total equity − cash & equivalents**
-- ROIC = NOPAT ÷ average invested capital
+- ROIC = NOPAT ÷ average invested capital (single-period when no prior)
 - ROCE = EBIT ÷ (total assets − current liabilities)
 - value-creation spread = ROIC − WACC
 

@@ -4,6 +4,12 @@
 5-way: ROE = tax burden x interest burden x operating margin
              x asset turnover x equity multiplier
 where tax burden = NI / pre-tax income, interest burden = pre-tax income / EBIT.
+
+Balances here are point-in-time (period-end), so the factors multiply back to
+an exact identity (NI / ending equity). This decomposed ROE can therefore
+differ from ``profitability.return_on_equity``, which divides by *average*
+equity when a prior period is available — the two answer slightly different
+questions and are not expected to match in a year when equity changed.
 """
 
 from __future__ import annotations

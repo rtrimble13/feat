@@ -5,9 +5,6 @@
 - net debt / EBITDA       = net debt / EBITDA
 - debt / equity           = total debt / total equity
 - interest coverage       = EBIT / interest expense
-- fixed-charge coverage   = (EBIT + fixed charges) / (interest + fixed charges)
-  (v1 approximates fixed charges with interest expense only; lease detail
-  is not reliably available from FMP statements)
 """
 
 from __future__ import annotations

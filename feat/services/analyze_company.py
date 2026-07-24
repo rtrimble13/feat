@@ -61,12 +61,21 @@ class AnalyzeCompany:
             prior = statements[idx + 1] if idx + 1 < len(statements) else None
             ratios.append((current.period.label(), derive.ratio_rows(current, prior)))
 
-        quality = self._quality(company, history) if len(history) >= 2 else None
+        # accruals_ratio was already computed for the latest period in `ratios`
+        # above (ratios[0] is statements[0] vs statements[1]); reuse it rather
+        # than recomputing the whole panel inside _quality.
+        quality = (
+            self._quality(company, history, ratios[0][1]["accruals_ratio"])
+            if len(history) >= 2
+            else None
+        )
         return Ok(AnalysisReport(
             company=company, history=history, ratios=ratios, quality=quality
         ))
 
-    def _quality(self, company: Company, history: FinancialHistory) -> QualitySummary:
+    def _quality(
+        self, company: Company, history: FinancialHistory, accruals: float | None
+    ) -> QualitySummary:
         current, prior = history.statements[0], history.statements[1]
         c_inc, c_bal, c_cf = current.income, current.balance, current.cash_flow
         p_inc, p_bal, p_cf = prior.income, prior.balance, prior.cash_flow
@@ -121,7 +130,6 @@ class AnalyzeCompany:
         beneish = beneish_m(
             beneish_period(c_inc, c_bal, c_cf), beneish_period(p_inc, p_bal, p_cf)
         )
-        accruals = derive.ratio_rows(current, prior)["accruals_ratio"]
         return QualitySummary(
             piotroski=pio, altman=altman, beneish=beneish, accruals_ratio=accruals
         )

@@ -6,6 +6,9 @@
 FMP reports capex as a negative investing outflow; the sign is
 normalized here. If OCF or capex is missing the result is None — a
 free-cash-flow figure built on a silent zero would corrupt every DCF.
+Missing interest expense or tax rate, by contrast, is treated as 0: these
+are adjustment legs, not core inputs, so their absence shrinks the
+adjustment rather than voiding the whole figure.
 """
 
 from __future__ import annotations
