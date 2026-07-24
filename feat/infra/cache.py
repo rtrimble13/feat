@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import tempfile
 import time
 from pathlib import Path
 from typing import Any, Callable
@@ -63,6 +65,19 @@ class DiskCache:
     def put(self, key: str, body: Any) -> None:
         envelope = {"stored_at": self._clock(), "key": key, "body": body}
         path = self._path(key)
-        tmp = path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(envelope), encoding="utf-8")
-        tmp.replace(path)  # atomic on POSIX: readers never see a partial file
+        # A per-writer temp file (unique name) rather than a shared "<key>.tmp":
+        # two processes writing the same key concurrently must not collide on
+        # one temp path (which would corrupt the file or make replace() raise
+        # FileNotFoundError). os.replace stays atomic, so readers never see a
+        # partial file.
+        fd, tmp_name = tempfile.mkstemp(dir=self._dir, suffix=".tmp")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                json.dump(envelope, fh)
+            os.replace(tmp_name, path)
+        except BaseException:
+            try:
+                os.unlink(tmp_name)  # don't leak the temp file on failure
+            except OSError:
+                pass
+            raise

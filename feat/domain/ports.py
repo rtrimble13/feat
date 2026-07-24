@@ -8,7 +8,6 @@ or a second vendor is added, only the adapter changes.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from datetime import date
 
 from feat.domain.entities import Company, FinancialHistory
 from feat.domain.errors import AnalysisError, Result
@@ -39,20 +38,4 @@ class FundamentalsRepository(ABC):
 
     @abstractmethod
     def screen(self, filters: dict[str, str | float | int]) -> Result[list[dict], AnalysisError]:
-        ...
-
-
-class PriceRepository(ABC):
-    """Access to quotes and historical prices (always adjusted close)."""
-
-    @abstractmethod
-    def get_quote(self, ticker: Ticker) -> Result[Company, AnalysisError]:
-        """Quote enriched onto the Company (price, market cap, shares)."""
-        ...
-
-    @abstractmethod
-    def get_adjusted_closes(
-        self, ticker: Ticker, start: date, end: date
-    ) -> Result[list[tuple[date, float]], AnalysisError]:
-        """Daily (date, adjClose) pairs, oldest first. Never raw close."""
         ...

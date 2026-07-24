@@ -18,7 +18,7 @@ from feat.domain.errors import (
 from feat.domain.forecasting.monte_carlo import MonteCarloResult, simulate
 from feat.domain.forecasting.scenarios import apply_scenario
 from feat.domain.forecasting.sensitivity import SensitivityGrid, wacc_growth_grid
-from feat.domain.ports import FundamentalsRepository, PriceRepository
+from feat.domain.ports import FundamentalsRepository
 from feat.domain.valuation import ValuationInputs, ValuationOutcome, margin_of_safety
 from feat.domain.valuation.factory import build_valuation_model
 from feat.domain.valuation.relative import (
@@ -60,11 +60,9 @@ class ValueCompany:
     def __init__(
         self,
         fundamentals: FundamentalsRepository,
-        prices: PriceRepository,
         config: FeatConfig,
     ) -> None:
         self._fundamentals = fundamentals
-        self._prices = prices
         self._config = config
 
     def run(

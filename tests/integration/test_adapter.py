@@ -7,7 +7,7 @@ import responses
 
 from feat.domain.errors import SymbolNotFound
 from feat.domain.values import MISSING, PeriodType, Ticker, is_missing
-from feat.infra.fmp.adapter import FmpAdapter, _money_first, chunk_symbols
+from feat.infra.fmp.adapter import FmpAdapter, _money_first
 from tests.integration.conftest import load_fixture, make_client
 
 V3 = "https://financialmodelingprep.com/api/v3"
@@ -117,22 +117,3 @@ def test_screen_passes_filters_through(tmp_path):
     assert "sector=Technology" in url and "limit=50" in url
 
 
-@responses.activate
-def test_adjusted_closes_used_not_raw_close(tmp_path):
-    responses.get(f"{V3}/historical-price-full/TEST", json=load_fixture("prices_test.json"))
-    series = adapter(tmp_path).get_adjusted_closes(
-        Ticker("TEST"), date(2024, 1, 1), date(2024, 1, 31)
-    ).unwrap()
-    assert series == [
-        (date(2024, 1, 2), 94.0),   # adjClose values, oldest first
-        (date(2024, 1, 3), 96.5),
-        (date(2024, 1, 4), 95.0),
-    ]
-    assert all(price != 96.0 or day != date(2024, 1, 4) for day, price in series)
-
-
-def test_chunk_symbols_reassembles_batches():
-    assert chunk_symbols(["A", "B", "C", "D", "E", "F", "G"], size=5) == [
-        ["A", "B", "C", "D", "E"], ["F", "G"],
-    ]
-    assert chunk_symbols([], size=5) == []

@@ -40,25 +40,11 @@ class Endpoint:
 
 
 PROFILE = Endpoint("profile", ApiBase.V3, "/profile/{symbol}", _DAY)
-QUOTE = Endpoint("quote", ApiBase.V3, "/quote/{symbol}", 15 * 60)
-HISTORICAL_PRICES = Endpoint(
-    "historical_prices", ApiBase.V3, "/historical-price-full/{symbol}", _DAY
-)
 INCOME_STATEMENT = Endpoint("income_statement", ApiBase.V3, "/income-statement/{symbol}", 7 * _DAY)
 BALANCE_SHEET = Endpoint(
     "balance_sheet", ApiBase.V3, "/balance-sheet-statement/{symbol}", 7 * _DAY
 )
 CASH_FLOW = Endpoint("cash_flow", ApiBase.V3, "/cash-flow-statement/{symbol}", 7 * _DAY)
-KEY_METRICS = Endpoint("key_metrics", ApiBase.V3, "/key-metrics/{symbol}", 7 * _DAY)
-RATIOS = Endpoint("ratios", ApiBase.V3, "/ratios/{symbol}", 7 * _DAY)
 DCF_REFERENCE = Endpoint("dcf_reference", ApiBase.V3, "/discounted-cash-flow/{symbol}", _DAY)
-EARNINGS_SURPRISES = Endpoint(
-    "earnings_surprises", ApiBase.V3, "/earnings-surprises/{symbol}", 7 * _DAY
-)
-INSTITUTIONAL_HOLDERS = Endpoint(
-    "institutional_holders", ApiBase.V3, "/institutional-holder/{symbol}", 7 * _DAY
-)
 STOCK_PEERS = Endpoint("stock_peers", ApiBase.V4, "/stock_peers", 7 * _DAY)
-SHARES_FLOAT = Endpoint("shares_float", ApiBase.V4, "/shares_float", _DAY)
-SECTOR_PE = Endpoint("sector_pe", ApiBase.V4, "/sector_price_earning_ratio", _DAY)
 SCREENER = Endpoint("screener", ApiBase.STABLE, "/company-screener", _HOUR)

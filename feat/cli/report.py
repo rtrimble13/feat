@@ -39,7 +39,7 @@ def run(args: argparse.Namespace, ctx) -> int:
             return 2
 
     analyzer = AnalyzeCompany(ctx.adapter)
-    valuer = ValueCompany(ctx.adapter, ctx.adapter, ctx.config)
+    valuer = ValueCompany(ctx.adapter, ctx.config)
     service = BuildTearsheet(analyzer, valuer)
 
     exit_code = 0

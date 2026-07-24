@@ -72,7 +72,7 @@ def run(args: argparse.Namespace, ctx) -> int:
         horizon_years=args.horizon,
         exit_ev_ebitda=args.exit_multiple,
     )
-    service = ValueCompany(ctx.adapter, ctx.adapter, ctx.config)
+    service = ValueCompany(ctx.adapter, ctx.config)
 
     exit_code = 0
     for ticker in tickers:
