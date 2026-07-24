@@ -134,3 +134,28 @@ class TestDeriveRows:
     def test_avg_helper(self):
         assert avg(10, 20) == 15
         assert avg(10, None) is None
+
+
+class TestHistoricalGrowth:
+    def test_simple_cagr_no_gaps(self):
+        # 100 -> 121 over two periods = 10%/yr
+        assert derive.historical_growth([100.0, 110.0, 121.0]) == pytest.approx(0.10)
+
+    def test_interior_gap_counts_elapsed_periods_not_present_values(self):
+        # the missing middle year is a real period: (121/100)^(1/2) - 1 = 10%,
+        # NOT the (121/100)^1 - 1 = 21% the old count-based horizon produced.
+        assert derive.historical_growth([100.0, None, 121.0]) == pytest.approx(0.10)
+
+    def test_window_bounds_horizon_to_max_years(self):
+        # only the last max_years+1 positions count: 2 -> 64 over 5 periods
+        series = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0]
+        assert derive.historical_growth(series, max_years=5) == pytest.approx(1.0)
+
+    def test_fewer_than_two_present_values_is_none(self):
+        assert derive.historical_growth([None, 100.0]) is None
+        assert derive.historical_growth([100.0]) is None
+        assert derive.historical_growth([]) is None
+
+    def test_non_positive_endpoint_is_none(self):
+        assert derive.historical_growth([-5.0, 10.0]) is None
+        assert derive.historical_growth([10.0, 0.0]) is None

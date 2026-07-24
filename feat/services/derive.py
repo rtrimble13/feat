@@ -187,14 +187,20 @@ def payout_ratio_of(s: StatementSet) -> float | None:
 
 
 def historical_growth(values: list[float | None], max_years: int = 5) -> float | None:
-    """CAGR over up to ``max_years`` of a series (oldest first); None if
-    endpoints are missing or non-positive."""
-    clean = [v for v in values if v is not None]
-    if len(clean) < 2:
+    """CAGR over up to ``max_years`` periods of a series (oldest first, one
+    entry per period). ``None`` if fewer than two present values, or an
+    endpoint is non-positive.
+
+    Interior gaps keep their position, so the annualized horizon reflects the
+    number of periods *elapsed* between the first and last present values, not
+    the count of reported values: ``[100, None, 121]`` is a two-year CAGR of
+    10%, not a one-year 21%.
+    """
+    window = values[-(max_years + 1):]
+    present = [(i, v) for i, v in enumerate(window) if v is not None]
+    if len(present) < 2:
         return None
-    window = clean[-(max_years + 1):]
-    first, last = window[0], window[-1]
+    (first_i, first), (last_i, last) = present[0], present[-1]
     if first <= 0 or last <= 0:
         return None
-    years = len(window) - 1
-    return (last / first) ** (1.0 / years) - 1.0
+    return (last / first) ** (1.0 / (last_i - first_i)) - 1.0
