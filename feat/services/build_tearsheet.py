@@ -7,7 +7,7 @@ from __future__ import annotations
 import html as html_mod
 from dataclasses import dataclass
 
-from feat.domain.errors import AnalysisError, Result, Ok
+from feat.domain.errors import AnalysisError, Err, Result, Ok
 from feat.domain.values import Ticker, amount_of
 from feat.render.sparkline import sparkline
 from feat.services.analyze_company import AnalysisReport, AnalyzeCompany
@@ -43,7 +43,7 @@ class BuildTearsheet:
 
     def run(self, ticker: Ticker, model_name: str = "dcf-fcff") -> Result[Tearsheet, AnalysisError]:
         analysis_result = self._analyzer.run(ticker)
-        if analysis_result.is_err():
+        if isinstance(analysis_result, Err):
             return analysis_result
         analysis = analysis_result.unwrap()
 

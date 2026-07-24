@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
+from feat.domain.errors import Ok
 from feat.domain.valuation import ValuationInputs
 from feat.domain.valuation.factory import ValuationModel
 
@@ -35,6 +36,6 @@ def wacc_growth_grid(
         for g in growth_values:
             trial = replace(inputs, wacc=w, cost_of_equity=w, terminal_growth=g)
             result = model(trial)
-            row.append(result.value.fair_value_per_share if result.is_ok() else None)
+            row.append(result.value.fair_value_per_share if isinstance(result, Ok) else None)
         rows.append(row)
     return SensitivityGrid(wacc_values=wacc_values, growth_values=growth_values, fair_values=rows)

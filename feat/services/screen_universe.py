@@ -73,7 +73,7 @@ class ScreenUniverse:
         if filters.limit < 1 or filters.limit > 1000:
             return Err(InvalidInput("screen limit must be between 1 and 1000"))
         raw_result = self._fundamentals.screen(filters.to_fmp_params())
-        if raw_result.is_err():
+        if isinstance(raw_result, Err):
             return raw_result
         rows = []
         for record in raw_result.unwrap():

@@ -19,5 +19,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install
         run: pip install -e .[dev]
+      - name: Lint (ruff)
+        run: ruff check feat tests
+      - name: Type-check (mypy)
+        run: mypy
       - name: Run tests
-        run: python -m pytest -q
+        run: python -m pytest --cov=feat --cov-report=term-missing --cov-fail-under=85 -q

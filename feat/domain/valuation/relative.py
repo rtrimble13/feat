@@ -60,7 +60,7 @@ def compute_multiples(m: MultipleInputs) -> dict[str, float | None]:
     }
 
 
-def median(values: list[float]) -> float | None:
+def median(values: list[float | None]) -> float | None:
     clean = sorted(v for v in values if v is not None)
     if not clean:
         return None

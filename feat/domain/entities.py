@@ -203,7 +203,7 @@ class FinancialHistory:
                     continue
                 v = getattr(s.income, f.name)
                 a = amount_of(v) if not isinstance(v, (int, float, type(None))) else None
-                row[f.name] = (a / rev) if (a is not None and rev not in (None, 0)) else None
+                row[f.name] = (a / rev) if (a is not None and rev is not None and rev != 0) else None
             out.append(row)
         return out
 

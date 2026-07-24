@@ -42,12 +42,12 @@ class AnalyzeCompany:
         years: int = 10,
     ) -> Result[AnalysisReport, AnalysisError]:
         company_result = self._fundamentals.get_company(ticker)
-        if company_result.is_err():
+        if isinstance(company_result, Err):
             return company_result
         company = company_result.unwrap()
 
         history_result = self._fundamentals.get_history(ticker, period, years)
-        if history_result.is_err():
+        if isinstance(history_result, Err):
             return history_result
         history = history_result.unwrap()
         if len(history) == 0:

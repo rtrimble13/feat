@@ -73,21 +73,22 @@ def beneish_m(current: BeneishPeriod, prior: BeneishPeriod) -> BeneishResult | N
         div(prior.total_liabilities, prior.total_assets),
     )
 
+    if (dsri is None or gmi is None or aqi is None or sgi is None
+            or depi is None or sgai is None or tata is None or lvgi is None):
+        return None  # a partial M-score is not an M-score
     indices = {
         "DSRI": dsri, "GMI": gmi, "AQI": aqi, "SGI": sgi,
         "DEPI": depi, "SGAI": sgai, "TATA": tata, "LVGI": lvgi,
     }
-    if any(v is None for v in indices.values()):
-        return None
     m = (
         -4.84
-        + 0.920 * indices["DSRI"]
-        + 0.528 * indices["GMI"]
-        + 0.404 * indices["AQI"]
-        + 0.892 * indices["SGI"]
-        + 0.115 * indices["DEPI"]
-        - 0.172 * indices["SGAI"]
-        + 4.679 * indices["TATA"]
-        - 0.327 * indices["LVGI"]
+        + 0.920 * dsri
+        + 0.528 * gmi
+        + 0.404 * aqi
+        + 0.892 * sgi
+        + 0.115 * depi
+        - 0.172 * sgai
+        + 4.679 * tata
+        - 0.327 * lvgi
     )
-    return BeneishResult(m_score=m, flag=m > -1.78, indices=indices)  # type: ignore[arg-type]
+    return BeneishResult(m_score=m, flag=m > -1.78, indices=indices)

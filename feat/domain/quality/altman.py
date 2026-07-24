@@ -44,8 +44,8 @@ def altman_z(
     c = div(ebit, total_assets)
     d = div(market_cap, total_liabilities)
     e = div(revenue, total_assets)
-    if any(x is None for x in (a, b, c, d, e)):
+    if a is None or b is None or c is None or d is None or e is None:
         return None
-    z = 1.2 * a + 1.4 * b + 3.3 * c + 0.6 * d + 1.0 * e  # type: ignore[operator]
+    z = 1.2 * a + 1.4 * b + 3.3 * c + 0.6 * d + 1.0 * e
     zone = "safe" if z > 2.99 else ("grey" if z >= 1.81 else "distress")
     return AltmanResult(z=z, zone=zone, components={"A": a, "B": b, "C": c, "D": d, "E": e})

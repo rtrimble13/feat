@@ -12,6 +12,7 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass, replace
 
+from feat.domain.errors import Ok
 from feat.domain.valuation import ValuationInputs
 from feat.domain.valuation.factory import ValuationModel
 
@@ -55,7 +56,7 @@ def simulate(
             cost_of_equity=rng.gauss(inputs.cost_of_equity, discount_vol),
         )
         result = model(trial)
-        if result.is_ok():
+        if isinstance(result, Ok):
             values.append(result.value.fair_value_per_share)
     if not values:
         raise ValueError("no valid Monte Carlo draws — assumptions too close to degenerate")

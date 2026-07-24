@@ -78,14 +78,14 @@ class ValueCompany:
         with_sensitivity: bool = True,
     ) -> Result[ValuationReport, AnalysisError]:
         company_result = self._fundamentals.get_company(ticker)
-        if company_result.is_err():
+        if isinstance(company_result, Err):
             return company_result
         company = company_result.unwrap()
 
         history_result = self._fundamentals.get_history(
             ticker, PeriodType.ANNUAL, self._config.default_years_history
         )
-        if history_result.is_err():
+        if isinstance(history_result, Err):
             return history_result
         history = history_result.unwrap()
         if len(history) < 2:
@@ -101,7 +101,7 @@ class ValueCompany:
         else:
             model = build_valuation_model(model_name)
             outcome_result = model(inputs)
-        if outcome_result.is_err():
+        if isinstance(outcome_result, Err):
             return outcome_result
         outcome = outcome_result.unwrap()
 
