@@ -33,12 +33,10 @@ from feat.domain.errors import (
     SymbolNotFound,
     UpstreamUnavailable,
 )
-from feat.domain.ports import FundamentalsRepository, PriceRepository
+from feat.domain.ports import FundamentalsRepository
 from feat.domain.values import MISSING, FiscalPeriod, Money, MoneyLike, PeriodType, Ticker
 from feat.infra.fmp import endpoints as ep
 from feat.infra.fmp.client import FmpClient, FmpRateLimited, FmpUnavailable
-
-BATCH_SIZE = 5  # reliable comma-batch size for FMP symbol lists
 
 
 def _money(record: dict, field: str, currency: str) -> MoneyLike:
@@ -85,7 +83,7 @@ def _fiscal_period(record: dict, period_type: PeriodType) -> FiscalPeriod:
     )
 
 
-class FmpAdapter(FundamentalsRepository, PriceRepository):
+class FmpAdapter(FundamentalsRepository):
     def __init__(self, client: FmpClient) -> None:
         self._client = client
 
@@ -272,51 +270,3 @@ class FmpAdapter(FundamentalsRepository, PriceRepository):
             return result
         body = result.unwrap()
         return Ok(body if isinstance(body, list) else [])
-
-    # -- PriceRepository --------------------------------------------------
-
-    def get_quote(self, ticker: Ticker) -> Result[Company, AnalysisError]:
-        result = self._get(ep.QUOTE, {"symbol": ticker.symbol})
-        if result.is_err():
-            return result
-        body = result.unwrap()
-        if not isinstance(body, list) or not body:
-            return Err(SymbolNotFound(f"no quote for {ticker} on FMP"))
-        record = body[0]
-        return Ok(Company(
-            ticker=ticker,
-            name=str(record.get("name") or ticker.symbol),
-            price=_money(record, "price", "USD"),
-            market_cap=_money(record, "marketCap", "USD"),
-            shares_outstanding=_number(record, "sharesOutstanding"),
-        ))
-
-    def get_adjusted_closes(
-        self, ticker: Ticker, start: date, end: date
-    ) -> Result[list[tuple[date, float]], AnalysisError]:
-        result = self._get(
-            ep.HISTORICAL_PRICES,
-            {"symbol": ticker.symbol},
-            **{"from": start.isoformat(), "to": end.isoformat()},
-        )
-        if result.is_err():
-            return result
-        body = result.unwrap()
-        rows = body.get("historical", []) if isinstance(body, dict) else []
-        if not rows:
-            return Err(SymbolNotFound(f"no price history for {ticker} on FMP"))
-        series: list[tuple[date, float]] = []
-        for row in rows:
-            adj = _number(row, "adjClose")  # total-return work never uses raw close
-            if adj is None or "date" not in row:
-                continue
-            series.append((_parse_date(row["date"]), adj))
-        series.sort(key=lambda pair: pair[0])
-        return Ok(series)
-
-
-def chunk_symbols(symbols: list[str], size: int = BATCH_SIZE) -> list[list[str]]:
-    """Chunk comma-batchable symbol lists to the reliable batch size."""
-    if size < 1:
-        raise ValueError("chunk size must be positive")
-    return [symbols[i : i + size] for i in range(0, len(symbols), size)]

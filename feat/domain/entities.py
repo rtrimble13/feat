@@ -7,18 +7,15 @@ nothing in the domain ever turns a gap into a zero.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, fields
-from typing import Iterable, Sequence
+from dataclasses import dataclass
+from typing import Sequence
 
 from feat.domain.values import (
     MISSING,
     FiscalPeriod,
-    Money,
     MoneyLike,
-    PeriodType,
     Ticker,
     amount_of,
-    is_missing,
 )
 
 
@@ -111,21 +108,6 @@ class StatementSet:
     cash_flow: CashFlowStatement
 
 
-def _sum_flow(values: Iterable[MoneyLike]) -> MoneyLike:
-    """Sum flow items across periods; any missing period poisons the sum.
-
-    A TTM figure built on a missing quarter would be silently understated,
-    so the gap propagates instead.
-    """
-    total: Money | None = None
-    for v in values:
-        if is_missing(v):
-            return MISSING
-        assert isinstance(v, Money)
-        total = v if total is None else total + v
-    return MISSING if total is None else total
-
-
 class FinancialHistory:
     """An ordered series of statement sets, most recent first.
 
@@ -155,57 +137,6 @@ class FinancialHistory:
         if not self._statements:
             raise ValueError("empty financial history")
         return self._statements[0]
-
-    def ttm_income(self) -> IncomeStatement | None:
-        """Trailing-twelve-month roll-up of the four latest quarters.
-
-        Flow items are summed; per-share and share-count fields are taken
-        from the latest quarter (weighted averaging across quarters would
-        need share-issuance detail FMP does not provide). Returns None if
-        fewer than four quarterly periods exist.
-        """
-        quarters = [
-            s for s in self._statements if s.period.period_type is PeriodType.QUARTER
-        ][:4]
-        if len(quarters) < 4:
-            return None
-        latest = quarters[0].income
-        flow_fields = [
-            f.name
-            for f in fields(IncomeStatement)
-            if f.name not in {
-                "period", "currency", "eps_basic", "eps_diluted",
-                "weighted_shares_basic", "weighted_shares_diluted",
-            }
-        ]
-        rolled = {
-            name: _sum_flow(getattr(q.income, name) for q in quarters)
-            for name in flow_fields
-        }
-        return IncomeStatement(
-            period=latest.period,
-            currency=latest.currency,
-            eps_basic=latest.eps_basic,
-            eps_diluted=latest.eps_diluted,
-            weighted_shares_basic=latest.weighted_shares_basic,
-            weighted_shares_diluted=latest.weighted_shares_diluted,
-            **rolled,
-        )
-
-    def common_size_income(self) -> list[dict[str, float | None]]:
-        """Vertical analysis: each income line as a fraction of revenue."""
-        out: list[dict[str, float | None]] = []
-        for s in self._statements:
-            rev = amount_of(s.income.revenue)
-            row: dict[str, float | None] = {}
-            for f in fields(IncomeStatement):
-                if f.name in {"period", "currency"}:
-                    continue
-                v = getattr(s.income, f.name)
-                a = amount_of(v) if not isinstance(v, (int, float, type(None))) else None
-                row[f.name] = (a / rev) if (a is not None and rev is not None and rev != 0) else None
-            out.append(row)
-        return out
 
     def trend(self, field_name: str) -> list[float | None]:
         """Horizontal analysis: a single income line across periods, oldest first."""
