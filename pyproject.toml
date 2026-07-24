@@ -23,8 +23,8 @@ dev = [
     "pytest-cov==5.0.0",
     "ruff==0.15.8",
     "mypy==1.19.1",
-    "types-requests",
-    "types-tabulate",
+    "types-requests==2.33.0.20260712",
+    "types-tabulate==0.10.0.20260508",
 ]
 
 [project.scripts]
