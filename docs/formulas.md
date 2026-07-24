@@ -64,8 +64,7 @@ Rates are fractions throughout (0.15 = 15%).
 ## Cost of capital (`domain/costofcapital/`)
 
 - CAPM: r_e = r_f + β × ERP
-- Beta: OLS cov/var on adjusted-close returns (≥ 12 observations), or
-  Hamada unlever/relever: β_u = β_l ÷ (1 + (1 − t) D/E)
+- Beta: taken from the FMP company profile (β = 1.0 when absent)
 - Cost of debt: |interest expense| ÷ total debt, else r_f + 200 bps
 - WACC = E/(D+E) × r_e + D/(D+E) × r_d × (1 − t), market-value weights
   (market cap for E, book total debt as the standard proxy for D)
@@ -117,9 +116,3 @@ Models:
   + 0.892·SGI + 0.115·DEPI − 0.172·SGAI + 4.679·TATA − 0.327·LVGI;
   M > −1.78 flags manipulation risk; any missing index ⇒ no score
 - **Sloan accruals** = (NI − OCF) ÷ average total assets
-
-## TTM roll-up (`domain/entities.py`)
-
-Flow items summed over the four latest quarters; a missing quarter poisons
-the sum (visible gap). Per-share and share-count fields come from the latest
-quarter.
