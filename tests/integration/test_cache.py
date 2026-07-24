@@ -1,5 +1,7 @@
 """Disk cache: TTL policy, corruption handling, key hashing."""
 
+import threading
+
 import pytest
 
 from feat.infra.cache import CacheCorruption, DiskCache
@@ -45,3 +47,29 @@ def test_keys_never_become_path_components(tmp_path):
     assert len(files) == 1
     assert files[0].parent == tmp_path
     assert files[0].suffix == ".json"
+
+
+def test_concurrent_writers_to_same_key_do_not_collide(tmp_path):
+    # Simulates parallel `feat` processes fetching the same endpoint at once
+    # (e.g. `xargs -P4 feat analyze`). With a shared "<key>.tmp" name the racing
+    # replace() would raise FileNotFoundError or leave a corrupt file; with a
+    # per-writer temp file it never does.
+    cache = DiskCache(tmp_path)
+    errors: list[BaseException] = []
+
+    def hammer(worker: int) -> None:
+        try:
+            for _ in range(50):
+                cache.put("same-key", {"worker": worker})
+        except BaseException as exc:  # record and assert in the test thread
+            errors.append(exc)
+
+    workers = [threading.Thread(target=hammer, args=(i,)) for i in range(8)]
+    for t in workers:
+        t.start()
+    for t in workers:
+        t.join()
+
+    assert errors == []                                   # no racing replace() failures
+    assert cache.get("same-key", ttl_seconds=None) in [{"worker": i} for i in range(8)]
+    assert list(tmp_path.glob("*.tmp")) == []             # no leaked temp files
