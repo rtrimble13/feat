@@ -55,56 +55,56 @@ they are exactly the debt that lets a healthy codebase quietly rot.
 Ordered by priority tier (P0 → P3), then severity within tier. There are **no
 P0 findings** — no Critical/High defects were found.
 
-### [P1] `compare` and `screen` have zero test coverage — two dark features — [001](../backlog/001-compare-screen-zero-coverage.md)
+### [P1] `compare` and `screen` have zero test coverage — two dark features — [#3](https://github.com/rtrimble13/feat/issues/3)
 - **Lens:** Refactoring (test coverage)
 - **Priority:** P1 · **Impact:** High · **Effort:** Medium · **Severity:** — · **Confidence:** High
 - **Evidence:** `feat/services/compare_peers.py` (103 lines), `feat/services/screen_universe.py` (100 lines), `feat/cli/compare.py`, `feat/cli/screen.py` — no unit tests; neither command is invoked anywhere in `tests/e2e/test_cli.py`.
 - **Why it matters:** Two of the five shipped commands — including all peer-selection, median/multiple aggregation, and screener filter-mapping logic — are entirely unverified. A regression in `to_fmp_params`, peer dedup, or median math ships silently.
 - **Recommendation:** Add unit tests for both services against a fake `FundamentalsRepository`, and e2e journeys for both commands (mirroring the existing `analyze`/`value` e2e style with `responses` fixtures).
 
-### [P1] FMP resilience layer (breaker recovery, limiter timing, backoff) is untested — [002](../backlog/002-resilience-layer-untested.md)
+### [P1] FMP resilience layer (breaker recovery, limiter timing, backoff) is untested — [#4](https://github.com/rtrimble13/feat/issues/4)
 - **Lens:** Refactoring (test coverage) / Robustness
 - **Priority:** P1 · **Impact:** High · **Effort:** Low · **Severity:** — · **Confidence:** High
 - **Evidence:** `feat/infra/fmp/client.py:99` (`CircuitBreaker.allow` half-open), `:106` (`record_success` reset), `:72` (`RateLimiter.acquire` refill/throttle), `:191` (backoff delay + `Retry-After` override), `:260` (`_parse_retry_after`). Existing tests use a no-op sleeper and a 600 s real-clock cooldown, so recovery/timing paths never execute.
 - **Why it matters:** These paths *are* the reason the client exists (surviving an FMP outage/rate-limit without amplifying it). A broken breaker-reset (stuck open) or a miscomputed token refill (over-throttle or blow the plan limit) would be a real production availability bug that today's suite cannot catch. The `clock`/`sleeper` seams to test this already exist and are unused.
 - **Recommendation:** Fake-clock tests for: breaker open → cooldown elapse → half-open probe → `record_success` reset; token-bucket refill/throttle/burst and the `rate<=0` guard; backoff cap + jitter bounds + `Retry-After` override; and `_parse_retry_after` numeric and HTTP-date-fallback branches.
 
-### [P1] CI has no lint, type-check, or coverage gate — [003](../backlog/003-ci-quality-gates.md)
+### [P1] CI has no lint, type-check, or coverage gate — [#5](https://github.com/rtrimble13/feat/issues/5)
 - **Lens:** Enhancement (CI/DX)
 - **Priority:** P1 · **Impact:** Medium · **Effort:** Low · **Severity:** — · **Confidence:** High
 - **Evidence:** `.github/workflows/ci.yml:22-23` runs only `python -m pytest -q`; `pyproject.toml:19-23` dev deps are just `pytest` + `responses`. The code is pervasively typed and littered with `# type: ignore[...]` (e.g. `cli/main.py:93`, `services/build_tearsheet.py:52`), implying an intended-but-absent type checker.
 - **Why it matters:** Nothing prevents untested code (like the two services above) or a type regression from merging. The `# type: ignore` comments are unverifiable claims without mypy in CI. This is the highest-leverage, lowest-effort structural improvement available.
 - **Recommendation:** Add `ruff` (lint+format), `mypy` (the `# type: ignore` markers show it was designed for strict typing), and `pytest-cov` with a threshold, as CI steps and dev extras. Introduce mypy at the current passing level and ratchet.
 
-### [P2] Dead / unwired subsystems inflate the surface — [004](../backlog/004-dead-unwired-subsystems.md)
+### [P2] Dead / unwired subsystems inflate the surface — [#6](https://github.com/rtrimble13/feat/issues/6)
 - **Lens:** Refactoring (dead code / over-engineering)
 - **Priority:** P2 · **Impact:** Medium · **Effort:** Medium · **Severity:** — · **Confidence:** High
 - **Evidence:** `feat/domain/costofcapital/beta.py` (all four functions), `FmpAdapter.get_adjusted_closes`/`get_quote` and the whole `PriceRepository` port, `FinancialHistory.ttm_income`/`common_size_income` (`entities.py:159,195`), `chunk_symbols` (`adapter.py:316`), and six endpoints (`KEY_METRICS`, `RATIOS`, `EARNINGS_SURPRISES`, `INSTITUTIONAL_HOLDERS`, `SHARES_FLOAT`, `SECTOR_PE`) have **no production call site** (verified by grep). `ValueCompany.__init__` stores `self._prices` (`value_company.py:67`) but never uses it.
 - **Why it matters:** ~250+ lines of implemented, partly-tested code is unreachable from any command. It misleads maintainers about what the tool does, and `ValueCompany` advertises a price dependency it doesn't use. This is low-risk (it's tested) but real maintenance drag.
 - **Recommendation:** Decide per subsystem: either **wire it** (see New feature ideas — bottom-up beta and TTM are genuinely valuable) or **delete it** and drop the unused `prices` parameter and endpoints. Don't leave it dangling.
 
-### [P2] Cache temp-file collision under parallel same-symbol invocations — [005](../backlog/005-cache-tmp-collision.md)
+### [P2] Cache temp-file collision under parallel same-symbol invocations — [#7](https://github.com/rtrimble13/feat/issues/7)
 - **Lens:** Robustness (hidden bug)
 - **Priority:** P2 · **Impact:** Medium · **Effort:** Low · **Severity:** Medium · **Confidence:** High
 - **Evidence:** `feat/infra/cache.py:66-68` — `tmp = path.with_suffix(".tmp")` is a deterministic `<sha256>.tmp` per cache key, shared across processes; `tmp.replace(path)` follows.
 - **Why it matters:** The README markets batch/pipe use, and users will naturally parallelize (`xargs -P4 feat analyze`). Two concurrent processes fetching the *same* endpoint write the same `.tmp`: one `replace()` can raise `FileNotFoundError` (→ generic exit 1) or a reader can parse a half-written file (→ `CacheCorruption`). The single-process happy path is fine.
 - **Recommendation:** Make the temp name unique per writer — `tempfile.mkstemp(dir=self._dir)` or `<digest>.<pid>.<counter>.tmp` — then `os.replace` onto the final path (still atomic). Add a test simulating two writers to the same key.
 
-### [P3] `historical_growth` miscounts the CAGR horizon on interior gaps — [006](../backlog/006-historical-growth-gap-horizon.md)
+### [P3] `historical_growth` miscounts the CAGR horizon on interior gaps — [#8](https://github.com/rtrimble13/feat/issues/8)
 - **Lens:** Hidden bug
 - **Priority:** P3 · **Impact:** Low · **Effort:** Low · **Severity:** Low · **Confidence:** High
 - **Evidence:** `feat/services/derive.py:189-200` — `clean = [v for v in values if v is not None]` drops interior `None`s, then `years = len(window) - 1` and `(last/first)**(1/years)-1`. A missing middle year shortens the exponent's denominator.
 - **Why it matters:** This CAGR seeds the default DCF `growth` in `value_company.py:186`. With a gap in the revenue series it computes growth over the wrong number of years, biasing the default forecast. Blast radius is limited: growth is clamped to [-20%, 25%] and is override-able via `--growth`, and complete series are the common case.
 - **Recommendation:** Compute the span from the actual calendar distance between the first and last *present* points (or require a contiguous tail), not the count of non-null values.
 
-### [P3] Docstrings/definitions promise behavior the code doesn't deliver — [007](../backlog/007-docstring-definition-consistency.md)
+### [P3] Docstrings/definitions promise behavior the code doesn't deliver — [#9](https://github.com/rtrimble13/feat/issues/9)
 - **Lens:** Refactoring (correctness of documentation / internal consistency)
 - **Priority:** P3 · **Impact:** Low · **Effort:** Low · **Severity:** — · **Confidence:** Medium
 - **Evidence:** `profitability.py:9-10,39-54` and `efficiency.py:3,15-21` docstrings say ROA/ROE/ROIC/asset-turnover use *average* balances, but the code uses the *ending* balance when the optional `prior_*` arg is omitted. `dupont.py` ROE telescopes to NI/**ending** equity while `return_on_equity` uses **average** equity — two different "ROE"s for the same firm-year. `leverage.py:6` documents a `fixed-charge coverage` ratio that isn't implemented. `cashflows.py:22-23` silently 0-fills missing interest/tax (documented in `formulas.md` but not the module docstring).
 - **Why it matters:** No wrong *numbers* in the shipped flow, but the definitions are internally inconsistent and the docstrings overstate the API — the kind of drift that becomes a real bug once someone builds on the stated contract.
 - **Recommendation:** Make the docstrings match behavior (or vice-versa): state "average when a prior period is supplied, else ending"; reconcile DuPont vs `return_on_equity` on one equity basis; either implement `fixed_charge_coverage` or remove it from the docstring; note the FCFF 0-fill in the module docstring.
 
-### [P3] Redundant full ratio-panel recompute for one metric — [008](../backlog/008-redundant-ratio-recompute.md)
+### [P3] Redundant full ratio-panel recompute for one metric — [#10](https://github.com/rtrimble13/feat/issues/10)
 - **Lens:** Enhancement (performance / clarity)
 - **Priority:** P3 · **Impact:** Low · **Effort:** Low · **Severity:** — · **Confidence:** High
 - **Evidence:** `feat/services/analyze_company.py:124` calls `derive.ratio_rows(current, prior)` a second time solely to read `["accruals_ratio"]`, recomputing the entire ~40-metric panel already produced at `:62` for the latest period.
