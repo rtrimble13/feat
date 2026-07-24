@@ -9,12 +9,12 @@ FCFE is reconstructed upstream as
 
 from __future__ import annotations
 
-from feat.domain.errors import Err, InvalidInput, MissingRequiredField, Ok, Result
+from feat.domain.errors import AnalysisError, Err, InvalidInput, MissingRequiredField, Ok, Result
 from feat.domain.valuation import ValuationInputs, ValuationOutcome, margin_of_safety
 from feat.domain.valuation.dcf import run_dcf
 
 
-def value(inputs: ValuationInputs) -> Result[ValuationOutcome, "object"]:
+def value(inputs: ValuationInputs) -> Result[ValuationOutcome, AnalysisError]:
     if inputs.base_fcfe is None:
         return Err(MissingRequiredField(
             "FCFE could not be reconstructed (missing operating cash flow, "

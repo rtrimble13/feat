@@ -8,7 +8,7 @@ H-model:    V0 = [D0 x (1+gL) + D0 x H x (gS - gL)] / (r - gL),
 
 from __future__ import annotations
 
-from feat.domain.errors import Err, InvalidInput, MissingRequiredField, Ok, Result
+from feat.domain.errors import AnalysisError, Err, InvalidInput, MissingRequiredField, Ok, Result
 from feat.domain.valuation import ValuationInputs, ValuationOutcome, margin_of_safety
 from feat.domain.valuation.dcf import present_value, project_flows, terminal_value_perpetuity
 
@@ -33,7 +33,7 @@ def h_model(d0: float, g_short: float, g_long: float, half_life_years: float, r:
     return (d0 * (1.0 + g_long) + d0 * half_life_years * (g_short - g_long)) / (r - g_long)
 
 
-def value(inputs: ValuationInputs) -> Result[ValuationOutcome, "object"]:
+def value(inputs: ValuationInputs) -> Result[ValuationOutcome, AnalysisError]:
     d0 = inputs.dividends_per_share
     if d0 is None or d0 <= 0:
         return Err(MissingRequiredField(

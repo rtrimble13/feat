@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from dataclasses import asdict
 from pathlib import Path
 
 from feat.cli import format as fmt
@@ -91,7 +92,7 @@ def _document(report: ScreenReport) -> Document:
     lines = [f"{len(report.rows)} matches" + (f" · filters: {active}" if active else "")]
     data = {
         "filters": report.filters.to_fmp_params(),
-        "matches": [r.__dict__ for r in report.rows],
+        "matches": [asdict(r) for r in report.rows],
     }
     return Document(
         title="feat screen",

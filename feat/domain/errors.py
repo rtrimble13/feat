@@ -9,7 +9,7 @@ state) raise and fail loudly — they are never caught-and-continued.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Generic, TypeVar, Union
+from typing import Generic, NoReturn, TypeVar, Union
 
 T = TypeVar("T")
 E = TypeVar("E")
@@ -39,7 +39,7 @@ class Err(Generic[E]):
     def is_err(self) -> bool:
         return True
 
-    def unwrap(self) -> T:
+    def unwrap(self) -> NoReturn:
         raise RuntimeError(f"unwrap() on Err: {self.error}")
 
 

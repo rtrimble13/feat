@@ -8,7 +8,7 @@ not a forecast.
 
 from __future__ import annotations
 
-from feat.domain.errors import Err, InvalidInput, MissingRequiredField, Ok, Result
+from feat.domain.errors import AnalysisError, Err, InvalidInput, MissingRequiredField, Ok, Result
 from feat.domain.valuation import ValuationInputs, ValuationOutcome
 from feat.domain.valuation.dcf import run_dcf
 
@@ -50,7 +50,7 @@ def implied_growth(inputs: ValuationInputs) -> float | None:
     return (lo + hi) / 2.0
 
 
-def value(inputs: ValuationInputs) -> Result[ValuationOutcome, "object"]:
+def value(inputs: ValuationInputs) -> Result[ValuationOutcome, AnalysisError]:
     if inputs.price is None or inputs.price <= 0:
         return Err(MissingRequiredField("market price unavailable"))
     if inputs.base_fcff is None or inputs.base_fcff <= 0:

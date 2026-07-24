@@ -14,7 +14,7 @@ w defaults to 0.6 (competition erodes excess returns).
 
 from __future__ import annotations
 
-from feat.domain.errors import Err, InvalidInput, MissingRequiredField, Ok, Result
+from feat.domain.errors import AnalysisError, Err, InvalidInput, MissingRequiredField, Ok, Result
 from feat.domain.valuation import ValuationInputs, ValuationOutcome, margin_of_safety
 
 DEFAULT_PERSISTENCE = 0.6
@@ -48,7 +48,7 @@ def residual_income_value(
     return book_value_per_share + pv_total, ri_series
 
 
-def value(inputs: ValuationInputs) -> Result[ValuationOutcome, "object"]:
+def value(inputs: ValuationInputs) -> Result[ValuationOutcome, AnalysisError]:
     if inputs.book_value_per_share is None or inputs.book_value_per_share <= 0:
         return Err(MissingRequiredField(
             "book value per share unavailable or non-positive — residual "

@@ -265,7 +265,9 @@ class FmpAdapter(FundamentalsRepository, PriceRepository):
         return Ok(peers)
 
     def screen(self, filters: dict[str, str | float | int]) -> Result[list[dict], AnalysisError]:
-        result = self._get(ep.SCREENER, **filters)
+        # filters are FMP query params; their keys never collide with _get's
+        # own parameters, which mypy cannot know when unpacking a typed dict.
+        result = self._get(ep.SCREENER, **filters)  # type: ignore[arg-type]
         if result.is_err():
             return result
         body = result.unwrap()
